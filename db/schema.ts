@@ -1,5 +1,15 @@
-// Store CRM schema — slices land here in order:
-// 1. Customer directory, 2. Product inventory, 3. Orders, 4. Dashboard views.
-// Scaffold ships with no tables so `pnpm check` proves the full stack once.
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-export {};
+export const customers = sqliteTable("customers", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull().default(""),
+  notes: text("notes").notNull().default(""),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+export type Customer = typeof customers.$inferSelect;
+export type NewCustomer = typeof customers.$inferInsert;

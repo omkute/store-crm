@@ -156,7 +156,11 @@ function main() {
       .replaceAll("{{ISSUE_TITLE}}", issue.title)
       .replaceAll("{{ISSUE_BODY}}", issue.body ?? "(no issue body)");
     try {
-      run("opencode", ["run", "--agent", "implementer", prompt], { cwd: wt });
+      // --dir pins the agent to the worktree. `cwd` alone is NOT enough:
+      // opencode run resolves the project through git's common dir, so with
+      // cwd=worktree it still lands in the main checkout (observed live —
+      // the agent committed on a branch in ~/Desktop/store-crm instead).
+      run("opencode", ["run", "--dir", wt, "--agent", "implementer", prompt], { cwd: wt });
     } catch (err) {
       // execFileSync error.message embeds the whole prompt — keep the issue comment short.
       throw new Error(`opencode run exited with status ${err.status ?? "unknown"} (agent output above)`);

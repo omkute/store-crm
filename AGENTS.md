@@ -21,8 +21,8 @@ Learning vehicle for a PRD-driven agent workflow (Next.js + Drizzle + SQLite + V
 - `docs/agents/merging.md` — the PR ritual. Every change lands this way.
 - `GLOSSARY.md` — domain terms. Use exactly these words.
 - `.opencode/agent/` — `implementer` (does work), `reviewer` (read-only review).
-- `.opencode/prompts/` — prompts for headless runs (Phase 3+).
-- `scripts/` — `check.sh` (single gate), `agent/` (label state machine, Phase 3+).
+- `.opencode/prompts/` — prompts for headless runs (`implement.md`, filled in by `scripts/agent/run.mjs`).
+- `scripts/` — `check.sh` (single gate), `agent/` (`run.mjs` + `queue.mjs`: the label state machine — see `docs/agents/triage-labels.md`).
 
 ## Commands
 

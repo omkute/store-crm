@@ -11,9 +11,5 @@
       "git commit*": "allow",
       "gh *": "allow"
     }
-  },
-  "agent": {
-    "implementer": ".opencode/agent/implementer.md",
-    "reviewer": ".opencode/agent/reviewer.md"
   }
 }

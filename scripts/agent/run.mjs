@@ -155,7 +155,12 @@ function main() {
       .replaceAll("{{ISSUE_NUMBER}}", String(n))
       .replaceAll("{{ISSUE_TITLE}}", issue.title)
       .replaceAll("{{ISSUE_BODY}}", issue.body ?? "(no issue body)");
-    run("opencode", ["run", "--agent", "implementer", prompt], { cwd: wt });
+    try {
+      run("opencode", ["run", "--agent", "implementer", prompt], { cwd: wt });
+    } catch (err) {
+      // execFileSync error.message embeds the whole prompt — keep the issue comment short.
+      throw new Error(`opencode run exited with status ${err.status ?? "unknown"} (agent output above)`);
+    }
 
     // --- Assert >=1 commit, gate on the check, push, open a draft PR --------
     const commits = Number(out("git", ["rev-list", "--count", "origin/main..HEAD"], { cwd: wt }));

@@ -15,6 +15,13 @@
       "when": 1792251643184,
       "tag": "0001_clumsy_nighthawk",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792252424257,
+      "tag": "0002_oval_doctor_octopus",
+      "breakpoints": true
     }
   ]
 }

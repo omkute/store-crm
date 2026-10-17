@@ -100,7 +100,10 @@ export function listOrderItems(db: StoreDb, orderId: number): OrderItem[] {
     .all();
 }
 
-export function listOrders(db: StoreDb): OrderSummary[] {
+export function listOrders(
+  db: StoreDb,
+  opts?: { limit?: number },
+): OrderSummary[] {
   const rows = db
     .select({
       id: orders.id,
@@ -112,6 +115,7 @@ export function listOrders(db: StoreDb): OrderSummary[] {
     .from(orders)
     .innerJoin(customers, eq(orders.customerId, customers.id))
     .orderBy(desc(orders.placedAt), desc(orders.id))
+    .limit(opts?.limit ?? -1)
     .all();
   return rows.map((row) => ({
     ...row,

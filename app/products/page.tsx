@@ -1,7 +1,11 @@
 import { revalidatePath } from "next/cache";
+import { connection } from "next/server";
 import { db } from "@/db";
 import { createProduct, listProducts, updateProduct } from "@/db/products";
 
+// Products reads live SQLite rows per request — the inventory must never be
+// frozen at build time, so this segment blocks on connection() (Cache
+// Components opt-out via instant = false + connection()).
 export const instant = false;
 
 async function create(formData: FormData) {
@@ -29,6 +33,7 @@ function formatPrice(minor: number): string {
 }
 
 export default async function ProductsPage() {
+  await connection();
   const products = listProducts(db);
 
   return (

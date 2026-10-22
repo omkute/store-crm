@@ -1,6 +1,6 @@
 # ADR 0002 — PRD chaining: a sequential sub-issue walk
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-10-18
 
 ## Context
@@ -31,13 +31,13 @@ One orchestrator invocation on a labeled PRD performs exactly one **tick**: it r
    - candidate labeled `agent:in-progress` → stop, comment: stale lock, clear it manually if no run is live (exit 3).
 5. Otherwise the existing leaf pipeline runs on the candidate, unchanged: clear `agent:implement`/`agent:blocked`, add `agent:in-progress` (the lock); worktree off `origin/main`; implementer; `pnpm check`; push; draft PR; PR labeled `agent:review`; `agent:in-progress` removed; stop (exit 0). On failure: remove `agent:in-progress`, add `agent:blocked`, comment on the sub-issue, stop (exit 4) — Phase 3's failure behavior, scoped to the candidate. The PRD is untouched by a failed tick.
 6. The PRD keeps `agent:implement` between ticks: on a PRD the label means "enrolled in the walk", not "run now". The tick is idempotent — re-invocations while a slice's PR is open are no-ops; the sub-issues' closed states are the cursor. No new label is introduced.
-7. Terminal: the tick that opens the **last open sub-issue**'s PR also clears `agent:implement` from the PRD (the walk is exhausted at that point) and adds `Closes #<prd>` to that PR, so the final merge closes the last slice and the PRD together. A tick invoked when all sub-issues are already closed clears `agent:implement` if still present and stops.
+7. Terminal: the tick that opens the **last open sub-issue**'s PR also clears `agent:implement` from the PRD (the walk is exhausted at that point) and adds `Closes #<prd>` to that PR, so the final merge closes the last slice and the PRD together. A tick invoked when all sub-issues are already closed clears `agent:implement` if still present and stops. Confirmed 2026-10-18.
 
 ### Done detection: `Closes #n` in every leaf PR
 
 Leaf PR bodies switch from `Implements #n` to `Closes #n`. Merging then auto-closes the issue on `main`, so code landing and the readiness signal are the same atomic event; the next tick reads "done" directly from issue state, and the same sub-issue listing that resolves order also resolves readiness.
 
-This deliberately reverses the Phase 3 "no auto-close" choice. That choice fit a manual leaf workflow, where closing the issue was a review ritual after merge. The walk turns closure into a dependency signal — the next tick must not start until the previous slice is merged — so one merge must do both. GitHub closes on merge only (to the default branch, the only base used), never on PR open, so draft review semantics are unchanged.
+This deliberately reverses the Phase 3 "no auto-close" choice. That choice fit a manual leaf workflow, where closing the issue was a review ritual after merge. The walk turns closure into a dependency signal — the next tick must not start until the previous slice is merged — so one merge must do both. GitHub closes on merge only (to the default branch, the only base used), never on PR open, so draft review semantics are unchanged. Confirmed 2026-10-18.
 
 Why not keep `Implements` and detect merged PRs instead: the branch name is deterministic (`agent/issue-<n>-<slug>`) and `gh pr list --state merged --json headRefName` filters it exactly, so it is scriptable — but it makes readiness depend on a naming convention plus a second scan, where `Closes` is one word in a body the orchestrator already generates. Simplicity wins.
 
@@ -47,7 +47,7 @@ Why not keep `Implements` and detect merged PRs instead: the branch name is dete
 - `scripts/agent/run.mjs` — PR body convention: `Closes #<candidate>`, plus `Closes #<prd>` when the candidate is the last open sub-issue. The existing open-PR preflight (body search + close-keyword regex) extends to the candidate and already matches `closes`.
 - `scripts/agent/queue.mjs` — skips sub-issues (their `agent:implement` is a retry token, not a direct job); looping over `agent:implement` then naturally means one tick per enrolled PRD per queue run, and the summary reports ticks distinctly (completed / waiting on merge / blocked).
 - `docs/agents/triage-labels.md` (a parallel workstream owns the file) — document the PRD-enrollment meaning of `agent:implement`.
-- `agent:queued` stays documented-but-unused: a sequential walk never has more than one runnable slice and readiness is computed at tick time rather than stored as label state. Deferred to a future ADR (implement or retire). The unused `reviewer` agent (`.opencode/agent/reviewer.md`, referenced by nothing) is likewise out of scope here.
+- `agent:queued` stays documented-but-unused: a sequential walk never has more than one runnable slice and readiness is computed at tick time rather than stored as label state. Deferred to a future ADR (implement or retire). Confirmed 2026-10-18. The unused `reviewer` agent (`.opencode/agent/reviewer.md`, referenced by nothing) is likewise out of scope here.
 
 ## Alternatives considered
 
@@ -71,4 +71,4 @@ Why not keep `Implements` and detect merged PRs instead: the branch name is dete
   2. Update `scripts/agent/queue.mjs` (skip sub-issues; tick-aware summary).
   3. Tests for tick semantics: order resolution, closed-skipping, guards (open PR / blocked / stale lock), last-slice `Closes #<prd>` (colocated, `:memory:` SQLite where DB code is touched).
   4. Doc updates: `docs/agents/triage-labels.md` (PRD enrollment + `agent:queued` deferred — parallel workstream) and the closing note in `.opencode/skills/to-issues/SKILL.md`, which still describes a bundle PR closing the PRD.
-  5. Human approval: this ADR stays `proposed` until accepted; implementation lands separately.
+  5. Human approval: granted 2026-10-18; implementation lands separately.
